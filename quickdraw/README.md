@@ -176,33 +176,40 @@ Made with ❤️ and ⚡ by [Your Name]
 ## Project Overview
 The Quickdraw project is a drawing application built with React and TypeScript. It allows users to create and manipulate drawings on a canvas, providing an interactive and user-friendly experience.
 
-## Features
-- **Drawing Area**: Users can draw shapes and lines on a canvas using various tools.
-- **Toolbar**: A customizable toolbar for selecting different drawing options such as brush size and color.
-- **Responsive Design**: The application is designed to work on various screen sizes.
+# Quick Draw Challenge
 
-## Project Structure
-```
-quickdraw
-├── src
-│   ├── index.tsx          # Entry point of the application
-│   ├── App.tsx            # Main application component
-│   ├── components          # Contains reusable components
-│   │   ├── Canvas.tsx     # Drawing area component
-│   │   └── Toolbar.tsx     # Toolbar for drawing tools
-│   ├── hooks              # Custom hooks for managing state
-│   │   └── useDrawing.ts  # Hook for drawing logic
-│   ├── styles             # CSS styles for the application
-│   │   └── app.css        # Main stylesheet
-│   └── types              # TypeScript types and interfaces
-│       └── index.ts       # Type definitions
-├── public
-│   └── index.html         # Main HTML file
-├── package.json           # NPM configuration file
-├── tsconfig.json          # TypeScript configuration file
-├── vite.config.ts         # Vite configuration file
-├── .gitignore             # Git ignore file
-└── README.md              # Project documentation
+Quick Draw Challenge — a React + TypeScript drawing game inspired by Google's Quick, Draw!.
+
+Project summary:
+
+- Timed drawing rounds (20 seconds per prompt)
+- Real-time AI recognition using TensorFlow.js + MobileNet
+- Scoring based on speed and correctness, with time bonuses
+- Local leaderboard (saved to localStorage)
+- Responsive UI with touch + mouse drawing support
+
+Quick start (from inside the `quickdraw/` folder):
+
+1. npm install
+2. npm run dev
+
+Open http://localhost:5173 in your browser (Vite port may vary).
+
+How to play:
+
+1. Click Start and optionally enter your name.
+2. You will get a text prompt (e.g., "cat", "bicycle").
+3. Draw the prompt within 20 seconds. The AI will periodically try to recognise your sketch.
+4. If AI recognises the target, you score points (faster = more points). Complete the configured number of rounds and view your final score.
+
+Development notes:
+
+- The game uses MobileNet for quick image classification via `@tensorflow-models/mobilenet` and `@tensorflow/tfjs`.
+- Prompts and scoring logic are in `src/hooks/useGameLogic.ts`.
+- The canvas and drawing UI are in `src/components/GameCanvas.tsx` and `src/hooks/useDrawing.ts`.
+
+Want multiplayer? We can add a realtime backend (WebSocket or Firebase) to host rooms and sync canvases.
+
 ```
 
 ## Installation

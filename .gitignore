@@ -1,0 +1,17 @@
+# Node modules
+/quickdraw/node_modules/
+
+# Vite / build
+/quickdraw/dist/
+/quickdraw/.vite/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
