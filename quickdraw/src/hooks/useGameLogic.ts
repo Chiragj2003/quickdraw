@@ -1,7 +1,30 @@
+/**
+ * useGameLogic Hook
+ * 
+ * Main game state management hook for Quick Draw Challenge.
+ * Handles:
+ * - Game flow (start -> playing -> result)
+ * - Round progression and timing
+ * - Score calculation and high score persistence
+ * - Prompt selection and round management
+ * 
+ * @returns {Object} Game state and control functions
+ */
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, Prompt, GameScore, RoundResult, Prediction } from '../types';
 
-// Predefined prompts for the game (easier items that AI recognizes better)
+// ============================================================================
+// Game Configuration Constants
+// ============================================================================
+
+/**
+ * List of drawing prompts for the game
+ * These are carefully selected items that MobileNet can recognize well:
+ * - Common everyday objects (phone, cup, ball)
+ * - Simple animals (dog, cat, bird, fish)
+ * - Basic shapes (house, car, tree)
+ */
 const PROMPTS: Prompt[] = [
     { id: 1, text: 'dog', category: 'animal' },
     { id: 2, text: 'cat', category: 'animal' },
@@ -25,23 +48,41 @@ const PROMPTS: Prompt[] = [
     { id: 20, text: 'flower', category: 'nature' }
 ];
 
-const TIME_LIMIT = 20; // seconds per round
+/** How many seconds each round lasts */
+const TIME_LIMIT = 20;
+
+/** Base points awarded for a correct drawing */
 const POINTS_PER_CORRECT = 100;
+
+/** Multiplier for time bonus (faster drawings get more points) */
 const TIME_BONUS_MULTIPLIER = 10;
 
+// ============================================================================
+// Main Hook
+// ============================================================================
+
 export const useGameLogic = () => {
+    // Game state tracking
     const [gameState, setGameState] = useState<GameState>('start');
     const [currentPrompt, setCurrentPrompt] = useState<Prompt | null>(null);
     const [timeRemaining, setTimeRemaining] = useState(TIME_LIMIT);
+    
+    // Score tracking
     const [score, setScore] = useState(0);
     const [roundNumber, setRoundNumber] = useState(0);
-    const [totalRounds] = useState(5);
+    const [totalRounds] = useState(5); // Total rounds per game
     const [roundResults, setRoundResults] = useState<RoundResult[]>([]);
+    
+    // Player data
     const [playerName, setPlayerName] = useState('Player');
     const [highScores, setHighScores] = useState<GameScore[]>([]);
+    
+    // Timer reference for cleanup
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Load high scores from localStorage
+    // ========================================================================
+    // Load high scores from browser localStorage on mount
+    // ========================================================================
     useEffect(() => {
         const savedScores = localStorage.getItem('quickdraw-highscores');
         if (savedScores) {
@@ -49,17 +90,20 @@ export const useGameLogic = () => {
         }
     }, []);
 
-    // Timer logic
+    // ========================================================================
+    // Countdown timer - decrements every second during gameplay
+    // ========================================================================
     useEffect(() => {
         if (gameState === 'playing' && timeRemaining > 0) {
             timerRef.current = setTimeout(() => {
                 setTimeRemaining(prev => prev - 1);
             }, 1000);
         } else if (timeRemaining === 0 && gameState === 'playing') {
-            // Time's up for this round
+            // Time's up! End round as incorrect
             handleRoundEnd(false, [], '');
         }
 
+        // Cleanup timer on unmount or state change
         return () => {
             if (timerRef.current) {
                 clearTimeout(timerRef.current);
@@ -67,14 +111,24 @@ export const useGameLogic = () => {
         };
     }, [gameState, timeRemaining]);
 
+    /**
+     * Get a random prompt that hasn't been used yet this game
+     * Falls back to all prompts if we've used them all
+     */
     const getRandomPrompt = useCallback((): Prompt => {
+        // Filter out prompts already used this game
         const availablePrompts = PROMPTS.filter(
             p => !roundResults.some(r => r.prompt === p.text)
         );
+        // Use available prompts, or all if we've exhausted the list
         const prompts = availablePrompts.length > 0 ? availablePrompts : PROMPTS;
         return prompts[Math.floor(Math.random() * prompts.length)];
     }, [roundResults]);
 
+    /**
+     * Start a new game
+     * @param name - Optional player name (defaults to 'Player')
+     */
     const startGame = useCallback((name?: string) => {
         if (name) {
             setPlayerName(name);
@@ -87,6 +141,13 @@ export const useGameLogic = () => {
         setCurrentPrompt(getRandomPrompt());
     }, [getRandomPrompt]);
 
+    /**
+     * End the current round and calculate score
+     * 
+     * @param correct - Whether the AI correctly identified the drawing
+     * @param predictions - AI predictions for this drawing
+     * @param imageData - Base64 encoded image of the drawing
+     */
     const handleRoundEnd = useCallback((
         correct: boolean,
         predictions: Prediction[],
@@ -94,15 +155,18 @@ export const useGameLogic = () => {
     ) => {
         if (!currentPrompt) return;
 
+        // Calculate how long the player took
         const timeUsed = TIME_LIMIT - timeRemaining;
         let roundScore = 0;
 
         if (correct) {
-            // Base score + time bonus
+            // Award base points + time bonus
+            // Example: Finished in 5 seconds = 100 + (15 * 10) = 250 points
             roundScore = POINTS_PER_CORRECT + (timeRemaining * TIME_BONUS_MULTIPLIER);
             setScore(prev => prev + roundScore);
         }
 
+        // Store this round's result
         const result: RoundResult = {
             prompt: currentPrompt.text,
             userDrawing: imageData,
@@ -114,15 +178,15 @@ export const useGameLogic = () => {
 
         setRoundResults(prev => [...prev, result]);
 
-        // Check if game is over
+        // Check if this was the last round
         if (roundNumber >= totalRounds) {
-            // Game over
+            // Game over - show results after a brief delay
             setTimeout(() => {
                 setGameState('result');
                 saveHighScore();
             }, 1500);
         } else {
-            // Next round
+            // Next round - reset timer and get new prompt
             setTimeout(() => {
                 setRoundNumber(prev => prev + 1);
                 setTimeRemaining(TIME_LIMIT);
@@ -131,6 +195,10 @@ export const useGameLogic = () => {
         }
     }, [currentPrompt, timeRemaining, roundNumber, totalRounds, getRandomPrompt]);
 
+    /**
+     * Save player's score to localStorage leaderboard
+     * Keeps only top 10 scores
+     */
     const saveHighScore = useCallback(() => {
         const newScore: GameScore = {
             playerName,
@@ -141,14 +209,18 @@ export const useGameLogic = () => {
             timestamp: new Date()
         };
 
+        // Add new score and sort by score descending
         const updatedScores = [...highScores, newScore]
             .sort((a, b) => b.score - a.score)
-            .slice(0, 10); // Keep top 10
+            .slice(0, 10); // Keep only top 10
 
         setHighScores(updatedScores);
         localStorage.setItem('quickdraw-highscores', JSON.stringify(updatedScores));
     }, [playerName, score, roundResults, totalRounds, timeRemaining, currentPrompt, highScores]);
 
+    /**
+     * Reset game to initial state (back to start screen)
+     */
     const resetGame = useCallback(() => {
         setGameState('start');
         setCurrentPrompt(null);
@@ -158,24 +230,28 @@ export const useGameLogic = () => {
         setRoundResults([]);
     }, []);
 
+    /**
+     * Skip the current round (counts as incorrect)
+     */
     const skipRound = useCallback(() => {
         handleRoundEnd(false, [], '');
     }, [handleRoundEnd]);
 
+    // Return all game state and control functions
     return {
-        gameState,
-        currentPrompt,
-        timeRemaining,
-        score,
-        roundNumber,
-        totalRounds,
-        roundResults,
-        playerName,
-        highScores,
-        startGame,
-        handleRoundEnd,
-        resetGame,
-        skipRound,
-        setGameState
+        gameState,           // Current screen: 'start' | 'playing' | 'result' | 'leaderboard'
+        currentPrompt,       // What player should draw right now
+        timeRemaining,       // Seconds left in current round
+        score,              // Total points accumulated
+        roundNumber,        // Current round (1-5)
+        totalRounds,        // Total rounds in game (5)
+        roundResults,       // Array of completed rounds with results
+        playerName,         // Player's display name
+        highScores,         // Top 10 scores from localStorage
+        startGame,          // Function to begin a new game
+        handleRoundEnd,     // Function to complete current round
+        resetGame,          // Function to return to start screen
+        skipRound,          // Function to skip current round
+        setGameState        // Function to manually change game state
     };
 };
