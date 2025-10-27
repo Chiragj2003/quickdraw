@@ -1,28 +1,28 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, Prompt, GameScore, RoundResult, Prediction } from '../types';
 
-// Predefined prompts for the game
+// Predefined prompts for the game (easier items that AI recognizes better)
 const PROMPTS: Prompt[] = [
     { id: 1, text: 'dog', category: 'animal' },
     { id: 2, text: 'cat', category: 'animal' },
-    { id: 3, text: 'bicycle', category: 'vehicle' },
-    { id: 4, text: 'car', category: 'vehicle' },
-    { id: 5, text: 'airplane', category: 'vehicle' },
-    { id: 6, text: 'house', category: 'building' },
-    { id: 7, text: 'tree', category: 'nature' },
-    { id: 8, text: 'flower', category: 'nature' },
-    { id: 9, text: 'sun', category: 'nature' },
-    { id: 10, text: 'banana', category: 'food' },
-    { id: 11, text: 'apple', category: 'food' },
-    { id: 12, text: 'pizza', category: 'food' },
-    { id: 13, text: 'book', category: 'object' },
-    { id: 14, text: 'clock', category: 'object' },
-    { id: 15, text: 'umbrella', category: 'object' },
-    { id: 16, text: 'shoe', category: 'object' },
-    { id: 17, text: 'guitar', category: 'instrument' },
-    { id: 18, text: 'computer', category: 'technology' },
-    { id: 19, text: 'telephone', category: 'technology' },
-    { id: 20, text: 'bird', category: 'animal' }
+    { id: 3, text: 'car', category: 'vehicle' },
+    { id: 4, text: 'airplane', category: 'vehicle' },
+    { id: 5, text: 'house', category: 'building' },
+    { id: 6, text: 'tree', category: 'nature' },
+    { id: 7, text: 'sun', category: 'nature' },
+    { id: 8, text: 'banana', category: 'food' },
+    { id: 9, text: 'apple', category: 'food' },
+    { id: 10, text: 'pizza', category: 'food' },
+    { id: 11, text: 'shoe', category: 'object' },
+    { id: 12, text: 'cup', category: 'object' },
+    { id: 13, text: 'ball', category: 'object' },
+    { id: 14, text: 'chair', category: 'furniture' },
+    { id: 15, text: 'table', category: 'furniture' },
+    { id: 16, text: 'phone', category: 'technology' },
+    { id: 17, text: 'laptop', category: 'technology' },
+    { id: 18, text: 'bird', category: 'animal' },
+    { id: 19, text: 'fish', category: 'animal' },
+    { id: 20, text: 'flower', category: 'nature' }
 ];
 
 const TIME_LIMIT = 20; // seconds per round

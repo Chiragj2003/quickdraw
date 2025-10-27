@@ -30,11 +30,11 @@ const GameScreen: React.FC<GameScreenProps> = ({
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [lastAnalysisTime, setLastAnalysisTime] = useState(0);
 
-    // Analyze drawing periodically (every 2 seconds)
+    // Analyze drawing periodically (every 1 second for faster recognition)
     useEffect(() => {
         const analyze = async () => {
             const now = Date.now();
-            if (currentDrawing && !isAnalyzing && now - lastAnalysisTime > 2000) {
+            if (currentDrawing && !isAnalyzing && now - lastAnalysisTime > 1000) {
                 setIsAnalyzing(true);
                 setLastAnalysisTime(now);
                 const preds = await classifyDrawing(currentDrawing);
@@ -109,18 +109,23 @@ const GameScreen: React.FC<GameScreenProps> = ({
                         {isAnalyzing ? (
                             <p className="analyzing">Analyzing... 🤔</p>
                         ) : predictions.length > 0 ? (
-                            <ul className="predictions-list">
-                                {predictions.slice(0, 3).map((pred, idx) => (
-                                    <li key={idx} className="prediction-item">
-                                        <span className="prediction-name">{pred.className}</span>
-                                        <span className="prediction-confidence">
-                                            {(pred.probability * 100).toFixed(1)}%
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
+                            <>
+                                <ul className="predictions-list">
+                                    {predictions.slice(0, 3).map((pred, idx) => (
+                                        <li key={idx} className="prediction-item">
+                                            <span className="prediction-name">{pred.className}</span>
+                                            <span className="prediction-confidence">
+                                                {(pred.probability * 100).toFixed(1)}%
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <p className="hint-text">
+                                    💡 Tip: Draw more details to help the AI recognize "{prompt}"
+                                </p>
+                            </>
                         ) : (
-                            <p className="no-predictions">Start drawing!</p>
+                            <p className="no-predictions">Start drawing! The AI checks every second.</p>
                         )}
                     </div>
 

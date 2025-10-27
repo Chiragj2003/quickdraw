@@ -65,11 +65,47 @@ export const useImageRecognition = () => {
         const bestMatch = predictions[0].className.toLowerCase();
         const confidence = predictions[0].probability;
 
-        // Check if any prediction matches the target prompt
+        // Create variations of the target for better matching
+        const targetVariations = [
+            targetLower,
+            targetLower + 's', // plural
+            targetLower.slice(0, -1), // remove potential 's'
+            targetLower.replace(/s$/, ''), // remove trailing s
+        ];
+
+        // Check if any prediction matches the target prompt (more lenient)
         const matched = predictions.some(pred => {
             const className = pred.className.toLowerCase();
-            // Check for exact match or if the target is contained in the prediction
-            return className.includes(targetLower) || targetLower.includes(className);
+            
+            // Direct matches
+            if (className.includes(targetLower) || targetLower.includes(className)) {
+                return true;
+            }
+            
+            // Check variations
+            if (targetVariations.some(variation => 
+                className.includes(variation) || variation.includes(className)
+            )) {
+                return true;
+            }
+            
+            // Split multi-word predictions and check each word
+            const classWords = className.split(/[\s,]+/);
+            if (classWords.some(word => 
+                word === targetLower || 
+                targetVariations.includes(word) ||
+                word.startsWith(targetLower) ||
+                targetLower.startsWith(word)
+            )) {
+                return true;
+            }
+            
+            // Check if target appears in any word of the prediction
+            if (classWords.some(word => word.includes(targetLower))) {
+                return true;
+            }
+            
+            return false;
         });
 
         return { matched, confidence, bestMatch };
