@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "buildCommand": "cd quickdraw && npm install && npm run build",
+  "outputDirectory": "quickdraw/dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

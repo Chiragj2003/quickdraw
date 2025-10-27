@@ -4,9 +4,9 @@
   "description": "A drawing application built with React and TypeScript.",
   "main": "src/index.tsx",
   "scripts": {
-    "start": "vite",
+    "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "preview": "vite preview"
   },
   "keywords": [
     "drawing",
